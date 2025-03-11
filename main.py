@@ -1,12 +1,8 @@
 from CloudflareBypasser import CloudflareBypasser
-from selenium_stealth import stealth
-from selenium.webdriver.common.by import By
 from DrissionPage import ChromiumPage, ChromiumOptions
-import time
 import os
 
 co = ChromiumOptions()
-# co.headless()
 
 driver = ChromiumPage(addr_or_opts=co)
 driver.get('https://www.remax.pe/web/search/property/propiedad-terreno-en-venta-trujillo-trujillo-la-libertad-1116998/')
