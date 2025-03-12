@@ -1,7 +1,5 @@
 fastapi
 pydantic
-uvicorn
-PyVirtualDisplay
 
 Flask==3.1.0
 DrissionPage==4.1.0.17
