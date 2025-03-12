@@ -1,1 +1,1 @@
-web: ./install_chromium.sh && gunicorn main:app
+web: bash install_chromium.sh && gunicorn main:app
