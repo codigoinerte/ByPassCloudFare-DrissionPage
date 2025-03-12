@@ -21,7 +21,6 @@ arguments = [
     "-disable-gpu",
     "-accept-lang=en-US",
     "--no-sandbox",  # Necessary for Docker
-    "--headless=new"  # Ensure headless mode
 ]
 
 browser_path = "/usr/bin/google-chrome"
@@ -48,6 +47,12 @@ def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> C
         
     if proxy:
         options.set_proxy(proxy)
+    
+    options.set_argument("--auto-open-devtools-for-tabs", "true")
+    options.set_argument("--remote-debugging-port=9222")
+    options.set_argument("--no-sandbox")  # Necessary for Docker
+    options.set_argument("--disable-gpu")
+    options.set_argument("--headless", "new")
     
     driver = ChromiumPage(addr_or_opts=options)
     try:
