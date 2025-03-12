@@ -16,6 +16,7 @@ def get_page_source():
 
     try:
         co = ChromiumOptions()
+        co.binary_location = '/usr/bin/chromium-browser'  # Ruta al ejecutable de Chromium
         driver = ChromiumPage(addr_or_opts=co)
         driver.get(url)
 
