@@ -41,10 +41,7 @@ def is_safe_url(url: str) -> bool:
 def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> ChromiumPage:
     options = ChromiumOptions().auto_port()
     options.set_paths(browser_path=browser_path) #.headless(False)
-    
-    for arg in arguments:
-        options.set_argument(arg)
-        
+       
     if proxy:
         options.set_proxy(proxy)
     
