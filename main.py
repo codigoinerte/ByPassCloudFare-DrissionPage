@@ -43,6 +43,10 @@ def is_safe_url(url: str) -> bool:
 def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> ChromiumPage:
 
     options = ChromiumOptions().auto_port()    
+    options.set_argument("--auto-open-devtools-for-tabs", "true")
+    options.set_argument("--remote-debugging-port=9222")
+    options.set_argument("--no-sandbox")  # Necessary for Docker
+    options.set_argument("--disable-gpu") 
     options.set_paths(browser_path=browser_path).headless(False)
         
     if proxy:
