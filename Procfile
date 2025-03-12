@@ -1,1 +1,1 @@
-web: bash install_chromium.sh && gunicorn -k uvicorn.workers.UvicornWorker server:app
+web: bash install_chromium.sh && gunicorn -k uvicorn.workers.UvicornWorker main:app
