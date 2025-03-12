@@ -1,4 +1,3 @@
-# filepath: /var/www/cloudfare/main.py
 from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from CloudflareBypasser import CloudflareBypasser
@@ -8,7 +7,6 @@ import re
 
 # Chromium options arguments
 arguments = [
-    # "--remote-debugging-port=9222",  # Add this line for remote debugging
     "-no-first-run",
     "-force-color-profile=srgb",
     "-metrics-recording-only",
@@ -22,7 +20,8 @@ arguments = [
     "-deny-permission-prompts",
     "-disable-gpu",
     "-accept-lang=en-US",
-    #"-incognito" # You can add this line to open the browser in incognito mode by default 
+    "--no-sandbox",  # Necessary for Docker
+    "--headless=new"  # Ensure headless mode
 ]
 
 browser_path = "/usr/bin/google-chrome"
@@ -41,13 +40,11 @@ def is_safe_url(url: str) -> bool:
 
 # Function to bypass Cloudflare protection
 def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> ChromiumPage:
-
-    options = ChromiumOptions().auto_port()    
-    options.set_argument("--auto-open-devtools-for-tabs", "true")
-    options.set_argument("--remote-debugging-port=9222")
-    options.set_argument("--no-sandbox")  # Necessary for Docker
-    options.set_argument("--disable-gpu") 
+    options = ChromiumOptions().auto_port()
     options.set_paths(browser_path=browser_path).headless(False)
+    
+    for arg in arguments:
+        options.set_argument(arg)
         
     if proxy:
         options.set_proxy(proxy)
@@ -62,7 +59,7 @@ def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> C
         driver.quit()
         raise e
     
-#endpoint to get the page source
+# Endpoint to get the page source
 @app.route('/get_page_source', methods=['POST'])
 def get_page_source():
     data = request.get_json()
@@ -75,17 +72,6 @@ def get_page_source():
         return jsonify({"error": "URL is required"}), 400
 
     try:
-        # co = ChromiumOptions()
-        # co.binary_location = '/usr/bin/chromium-browser'  # Ruta al ejecutable de Chromium
-        # driver = ChromiumPage(addr_or_opts=co)
-        # driver.get(url)
-
-        # cf_bypasser = CloudflareBypasser(driver)
-        # cf_bypasser.bypass()
-
-        # page_source = driver.html
-        # driver.quit()
-
         driver = bypass_cloudflare(url, retries, log, proxy)
         html = driver.html
         
