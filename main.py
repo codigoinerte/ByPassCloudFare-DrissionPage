@@ -2,26 +2,16 @@ from urllib.parse import urlparse
 from flask import Flask, request, jsonify
 from CloudflareBypasser import CloudflareBypasser
 from DrissionPage import ChromiumPage, ChromiumOptions
+from pyvirtualdisplay import Display
+import argparse
+import atexit
 import os
 import re
 
-# Chromium options arguments
-arguments = [
-    "-no-first-run",
-    "-force-color-profile=srgb",
-    "-metrics-recording-only",
-    "-password-store=basic",
-    "-use-mock-keychain",
-    "-export-tagged-pdf",
-    "-no-default-browser-check",
-    "-disable-background-mode",
-    "-enable-features=NetworkService,NetworkServiceInProcess,LoadCryptoTokenExtension,PermuteTLSExtensions",
-    "-disable-features=FlashDeprecationWarning,EnablePasswordsAccountStorage",
-    "-deny-permission-prompts",
-    "-disable-gpu",
-    "-accept-lang=en-US",
-    "--no-sandbox",  # Necessary for Docker
-]
+# Check if running in Docker mode
+DOCKER_MODE = os.getenv("DOCKERMODE", "false").lower() == "true"
+
+SERVER_PORT = int(os.getenv("SERVER_PORT", 5000))
 
 browser_path = "/usr/bin/google-chrome"
 app = Flask(__name__)
@@ -39,17 +29,17 @@ def is_safe_url(url: str) -> bool:
 
 # Function to bypass Cloudflare protection
 def bypass_cloudflare(url: str, retries: int, log: bool, proxy: str = None) -> ChromiumPage:
+
     options = ChromiumOptions().auto_port()
-    options.set_paths(browser_path=browser_path) #.headless(False)
-       
-    if proxy:
-        options.set_proxy(proxy)
-    
+        
     options.set_argument("--auto-open-devtools-for-tabs", "true")
     options.set_argument("--remote-debugging-port=9222")
     options.set_argument("--no-sandbox")  # Necessary for Docker
     options.set_argument("--disable-gpu")
-    options.headless()
+    options.set_paths(browser_path=browser_path).headless(False)
+
+    if proxy:
+        options.set_proxy(proxy)
 
     driver = ChromiumPage(addr_or_opts=options)
     try:
@@ -85,4 +75,26 @@ def get_page_source():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    parser = argparse.ArgumentParser(description="Cloudflare bypass api")
+
+    parser.add_argument("--nolog", action="store_true", help="Disable logging")
+    parser.add_argument("--headless", action="store_true", help="Run in headless mode")
+
+    args = parser.parse_args()
+    display = None
+    
+    if args.headless or DOCKER_MODE:
+        display = Display(visible=0, size=(1920, 1080))
+        display.start()
+        
+        def cleanup_display():
+            if display:
+                display.stop()
+        atexit.register(cleanup_display)
+    
+    if args.nolog:
+        log = False
+    else:
+        log = True
+    
+    app.run(host='0.0.0.0', port=SERVER_PORT)
